@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estoque &amp; Custos · Loja de Construção</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div class="login-screen" id="login-screen">
+    <form class="login-box" id="login-form">
+      <p class="eyebrow">CONTROLE DE OBRA</p>
+      <h1 class="title">Estoque &amp; Custos</h1>
+      <p class="muted-text">Entre com sua conta para continuar.</p>
+      <label class="field-label">Email</label>
+      <input type="email" id="login-email" required autocomplete="username">
+      <label class="field-label">Senha</label>
+      <input type="password" id="login-password" required autocomplete="current-password">
+      <p class="login-error" id="login-error"></p>
+      <button type="submit" class="btn-primary full-width" id="login-submit">Entrar</button>
+    </form>
+  </div>
+
+  <div class="app" id="app" hidden>
+    <header class="mobile-topbar">
+      <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menu">&#9776;</button>
+      <div class="brand-name small">ESTOQUE</div>
+    </header>
+
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-name">ESTOQUE</div>
+        <div class="brand-sub">MATERIAL DE CONSTRUÇÃO</div>
+      </div>
+      <nav class="nav">
+        <button class="nav-item active" data-view="dashboard">Dashboard</button>
+        <button class="nav-item" data-view="produtos">Produtos</button>
+        <button class="nav-item" data-view="fornecedores">Fornecedores</button>
+        <button class="nav-item" data-view="compras">Entrada de estoque</button>
+        <button class="nav-item" data-view="venda">Venda</button>
+        <button class="nav-item" data-view="ajustes">Ajuste de estoque</button>
+        <button class="nav-item" data-view="relatorios">Relatórios</button>
+      </nav>
+      <div class="sidebar-footer">
+        <span id="conn-status">conectando…</span>
+        <button class="btn-link" id="btn-logout">Sair</button>
+      </div>
+    </aside>
+
+    <main class="content">
+
+      <!-- DASHBOARD -->
+      <section class="view active" id="view-dashboard">
+        <p class="eyebrow">VISÃO GERAL</p>
+        <h1 class="title">Dashboard</h1>
+
+        <div class="cards-row">
+          <div class="card">
+            <p class="card-label">VALOR EM ESTOQUE</p>
+            <p class="card-number" id="stat-valor-estoque">–</p>
+          </div>
+          <div class="card">
+            <p class="card-label">VENDAS HOJE</p>
+            <p class="card-number" id="stat-vendas-hoje">–</p>
+          </div>
+          <div class="card">
+            <p class="card-label">VENDAS DO MÊS</p>
+            <p class="card-number" id="stat-vendas-mes">–</p>
+          </div>
+          <div class="card card-alert">
+            <p class="card-label">ABAIXO DO MÍNIMO</p>
+            <p class="card-number" id="stat-estoque-baixo">–</p>
+          </div>
+        </div>
+
+        <p class="eyebrow section-spacer">ESTOQUE ABAIXO DO MÍNIMO</p>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>PRODUTO</th><th>ATUAL</th><th>MÍNIMO</th><th>UNIDADE</th></tr></thead>
+            <tbody id="alerta-estoque-body"></tbody>
+          </table>
+        </div>
+
+        <p class="eyebrow section-spacer">MAIS VENDIDOS NO MÊS</p>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>PRODUTO</th><th>QTD VENDIDA</th><th>TOTAL</th></tr></thead>
+            <tbody id="mais-vendidos-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- PRODUTOS -->
+      <section class="view" id="view-produtos">
+        <p class="eyebrow">CADASTRO DE MATERIAIS</p>
+        <div class="view-header">
+          <h1 class="title">Produtos</h1>
+          <button class="btn-primary" id="btn-novo-produto">+ Novo produto</button>
+        </div>
+        <input type="text" class="search" id="search-produtos" placeholder="Buscar por nome ou categoria">
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr><th>NOME</th><th>CATEGORIA</th><th>UNIDADE</th><th>ESTOQUE</th><th>MÍN.</th><th>CUSTO MÉDIO</th><th>PREÇO VENDA</th><th></th></tr>
+            </thead>
+            <tbody id="produtos-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- FORNECEDORES -->
+      <section class="view" id="view-fornecedores">
+        <p class="eyebrow">PARCEIROS DE COMPRA</p>
+        <div class="view-header">
+          <h1 class="title">Fornecedores</h1>
+          <button class="btn-primary" id="btn-novo-fornecedor">+ Novo fornecedor</button>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>NOME</th><th>CONTATO</th><th>OBSERVAÇÕES</th><th></th></tr></thead>
+            <tbody id="fornecedores-table-body"></tbody>
+          </table>
+        </div>
+
+        <p class="eyebrow section-spacer" id="historico-fornecedor-titulo" hidden>HISTÓRICO DE COMPRAS</p>
+        <div class="table-wrap">
+          <table class="table" id="historico-fornecedor-table" hidden>
+            <thead><tr><th>DATA</th><th>PRODUTO</th><th>QTD</th><th>CUSTO UNIT.</th></tr></thead>
+            <tbody id="historico-fornecedor-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ENTRADA DE ESTOQUE (COMPRA) -->
+      <section class="view" id="view-compras">
+        <p class="eyebrow">COMPRA DE MATERIAL</p>
+        <div class="view-header">
+          <h1 class="title">Entrada de estoque</h1>
+        </div>
+
+        <form class="form-card" id="form-compra">
+          <label class="field-label">Fornecedor</label>
+          <select id="compra-fornecedor" required></select>
+
+          <label class="field-label">Produto</label>
+          <select id="compra-produto" required></select>
+
+          <div class="field-row">
+            <div>
+              <label class="field-label">Quantidade</label>
+              <input type="number" step="0.001" min="0.001" id="compra-quantidade" required>
+            </div>
+            <div>
+              <label class="field-label">Custo unitário (R$)</label>
+              <input type="number" step="0.01" min="0" id="compra-custo" required>
+            </div>
+            <div>
+              <label class="field-label">Data</label>
+              <input type="date" id="compra-data" required>
+            </div>
+          </div>
+
+          <p class="form-error" id="compra-error"></p>
+          <button type="submit" class="btn-primary">Registrar entrada</button>
+        </form>
+
+        <p class="eyebrow section-spacer">ÚLTIMAS ENTRADAS</p>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>DATA</th><th>PRODUTO</th><th>FORNECEDOR</th><th>QTD</th><th>CUSTO UNIT.</th></tr></thead>
+            <tbody id="compras-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- VENDA (MINI-PDV) -->
+      <section class="view" id="view-venda">
+        <p class="eyebrow">FRENTE DE CAIXA</p>
+        <h1 class="title">Nova venda</h1>
+
+        <div class="pdv-layout">
+          <div class="form-card">
+            <label class="field-label">Vendedor</label>
+            <input type="text" id="venda-vendedor" placeholder="Nome de quem está vendendo">
+
+            <label class="field-label">Produto</label>
+            <select id="venda-produto"></select>
+
+            <div class="field-row">
+              <div>
+                <label class="field-label">Quantidade</label>
+                <input type="number" step="0.001" min="0.001" id="venda-quantidade" value="1">
+              </div>
+              <div class="field-row-btn">
+                <button type="button" class="btn-outline" id="btn-add-item-venda">Adicionar item</button>
+              </div>
+            </div>
+            <p class="form-error" id="venda-item-error"></p>
+          </div>
+
+          <div class="form-card">
+            <p class="field-label">Itens da venda</p>
+            <div class="table-wrap">
+              <table class="table">
+                <thead><tr><th>PRODUTO</th><th>QTD</th><th>PREÇO UNIT.</th><th>SUBTOTAL</th><th></th></tr></thead>
+                <tbody id="venda-itens-body"></tbody>
+              </table>
+            </div>
+            <p class="pdv-total">Total: <span id="venda-total">R$ 0,00</span></p>
+            <p class="form-error" id="venda-error"></p>
+            <button type="button" class="btn-primary full-width" id="btn-confirmar-venda">Confirmar venda</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- AJUSTE DE ESTOQUE -->
+      <section class="view" id="view-ajustes">
+        <p class="eyebrow">PERDA · QUEBRA · CONTAGEM</p>
+        <h1 class="title">Ajuste de estoque</h1>
+
+        <form class="form-card" id="form-ajuste">
+          <label class="field-label">Produto</label>
+          <select id="ajuste-produto" required></select>
+
+          <label class="field-label">Quantidade (use negativo para saída, positivo para entrada)</label>
+          <input type="number" step="0.001" id="ajuste-quantidade" required>
+
+          <label class="field-label">Motivo</label>
+          <input type="text" id="ajuste-motivo" placeholder="Ex: quebra no transporte, contagem de inventário" required>
+
+          <p class="form-error" id="ajuste-error"></p>
+          <button type="submit" class="btn-primary">Registrar ajuste</button>
+        </form>
+
+        <p class="eyebrow section-spacer">HISTÓRICO DE MOVIMENTAÇÕES</p>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>DATA</th><th>PRODUTO</th><th>TIPO</th><th>QTD</th><th>MOTIVO</th></tr></thead>
+            <tbody id="movimentacoes-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- RELATÓRIOS -->
+      <section class="view" id="view-relatorios">
+        <p class="eyebrow">DESEMPENHO</p>
+        <h1 class="title">Relatórios</h1>
+
+        <p class="eyebrow section-spacer">ESTOQUE VALORIZADO</p>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>PRODUTO</th><th>ESTOQUE</th><th>CUSTO MÉDIO</th><th>VALOR TOTAL</th></tr></thead>
+            <tbody id="relatorio-estoque-body"></tbody>
+          </table>
+        </div>
+
+        <p class="eyebrow section-spacer">MARGEM REALIZADA (VENDAS)</p>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>PRODUTO</th><th>QTD VENDIDA</th><th>RECEITA</th><th>CUSTO</th><th>MARGEM</th></tr></thead>
+            <tbody id="relatorio-margem-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- MODAL: novo/editar produto -->
+    <div class="modal-overlay" id="modal-produto-overlay"></div>
+    <div class="modal" id="modal-produto">
+      <h2 class="title small" id="modal-produto-titulo">Novo produto</h2>
+      <label class="field-label">Nome</label>
+      <input type="text" id="modal-produto-nome">
+      <label class="field-label">Categoria</label>
+      <input type="text" id="modal-produto-categoria" placeholder="Ex: cimento e argamassa, elétrica, hidráulica">
+      <label class="field-label">Unidade de medida</label>
+      <input type="text" id="modal-produto-unidade" placeholder="Ex: saco, m2, barra, kg, un, metro">
+      <div class="field-row">
+        <div>
+          <label class="field-label">Estoque mínimo</label>
+          <input type="number" step="0.001" min="0" id="modal-produto-minimo" value="0">
+        </div>
+        <div>
+          <label class="field-label">Preço de venda (R$)</label>
+          <input type="number" step="0.01" min="0" id="modal-produto-preco" value="0">
+        </div>
+      </div>
+      <label class="checkbox-label" id="modal-produto-ativo-wrap" hidden>
+        <input type="checkbox" id="modal-produto-ativo"> Produto ativo
+      </label>
+      <p class="form-error" id="modal-produto-error"></p>
+      <div class="drawer-actions">
+        <button class="btn-outline" id="modal-produto-cancel">Cancelar</button>
+        <button class="btn-primary" id="modal-produto-confirm">Salvar</button>
+      </div>
+    </div>
+
+    <!-- MODAL: novo fornecedor -->
+    <div class="modal-overlay" id="modal-fornecedor-overlay"></div>
+    <div class="modal" id="modal-fornecedor">
+      <h2 class="title small">Novo fornecedor</h2>
+      <label class="field-label">Nome</label>
+      <input type="text" id="modal-fornecedor-nome">
+      <label class="field-label">Contato</label>
+      <input type="text" id="modal-fornecedor-contato" placeholder="Telefone ou email">
+      <label class="field-label">Observações</label>
+      <input type="text" id="modal-fornecedor-obs">
+      <p class="form-error" id="modal-fornecedor-error"></p>
+      <div class="drawer-actions">
+        <button class="btn-outline" id="modal-fornecedor-cancel">Cancelar</button>
+        <button class="btn-primary" id="modal-fornecedor-confirm">Salvar</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
