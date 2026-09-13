@@ -253,10 +253,10 @@ function renderProdutos(filter = '') {
     tbody.innerHTML += `
       <tr class="${!p.active ? 'muted' : ''}">
         <td>${p.name}${!p.active ? ' (inativo)' : ''}</td>
-        <td>${p.category || '—'}</td>
+        <td class="hide-mobile">${p.category || '—'}</td>
         <td>${p.unit}</td>
         <td>${formatQty(p.current_stock)}</td>
-        <td>${formatQty(p.min_stock)}</td>
+        <td class="hide-mobile">${formatQty(p.min_stock)}</td>
         <td>${formatMoney(p.avg_cost)}</td>
         <td>${formatMoney(p.sale_price)}</td>
         <td><button class="icon-btn edit-produto-btn" data-id="${p.id}">Editar</button></td>
