@@ -7,10 +7,28 @@ let db;
 try {
   db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 } catch (err) {
-  document.addEventListener('DOMContentLoaded', () => {
-    $('#login-error').textContent =
-      'Configuração do Supabase ausente ou inválida em config.js (veja o README).';
-  });
+  db = null;
+}
+
+// Só chama o callback uma vez por clique/submit, mesmo se o usuário clicar
+// de novo (ou o navegador disparar o evento mais de uma vez) antes da
+// requisição anterior terminar — evita registros duplicados no banco.
+function guardAgainstDoubleSubmit(button, handler) {
+  let submitting = false;
+  return async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (submitting) return;
+    submitting = true;
+    const originalText = button.textContent;
+    button.disabled = true;
+    try {
+      await handler(e);
+    } finally {
+      submitting = false;
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  };
 }
 
 let products = [];
@@ -50,56 +68,28 @@ function supplierName(id) {
 // ---------- AUTH ----------
 
 async function checkSession() {
-  if (!db) return;
-  const { data: { session } } = await db.auth.getSession();
-  if (session) {
-    showApp();
-  } else {
-    showLogin();
+  if (!db) {
+    alert('Configuração do Supabase ausente ou inválida em config.js (veja o README).');
+    return;
   }
-}
-
-function showLogin() {
-  $('#login-screen').hidden = false;
-  $('#app').hidden = true;
-}
-
-function showApp() {
-  $('#login-screen').hidden = true;
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) {
+    window.location.href = 'login.html';
+    return;
+  }
   $('#app').hidden = false;
   loadAll();
 }
 
-$('#login-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  $('#login-error').textContent = '';
-
-  if (!db) {
-    $('#login-error').textContent =
-      'Configuração do Supabase ausente ou inválida em config.js (veja o README).';
-    return;
+db?.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_OUT') {
+    window.location.href = 'login.html';
   }
-
-  $('#login-submit').disabled = true;
-
-  const email = $('#login-email').value.trim();
-  const password = $('#login-password').value;
-
-  const { error } = await db.auth.signInWithPassword({ email, password });
-
-  $('#login-submit').disabled = false;
-
-  if (error) {
-    $('#login-error').textContent = 'Email ou senha inválidos.';
-    return;
-  }
-
-  showApp();
 });
 
 $('#btn-logout').addEventListener('click', async () => {
   await db.auth.signOut();
-  showLogin();
+  window.location.href = 'login.html';
 });
 
 // ---------- DATA LOADING ----------
@@ -310,7 +300,7 @@ $('#btn-novo-produto').addEventListener('click', () => openModalProduto(null));
 $('#modal-produto-cancel').addEventListener('click', closeModalProduto);
 $('#modal-produto-overlay').addEventListener('click', closeModalProduto);
 
-$('#modal-produto-confirm').addEventListener('click', async () => {
+$('#modal-produto-confirm').addEventListener('click', guardAgainstDoubleSubmit($('#modal-produto-confirm'), async () => {
   const name = $('#modal-produto-nome').value.trim();
   const category = $('#modal-produto-categoria').value.trim();
   const unit = $('#modal-produto-unidade').value.trim();
@@ -343,7 +333,7 @@ $('#modal-produto-confirm').addEventListener('click', async () => {
 
   closeModalProduto();
   await loadAll();
-});
+}));
 
 // ---------- FORNECEDORES ----------
 
@@ -414,7 +404,7 @@ $('#btn-novo-fornecedor').addEventListener('click', openModalFornecedor);
 $('#modal-fornecedor-cancel').addEventListener('click', closeModalFornecedor);
 $('#modal-fornecedor-overlay').addEventListener('click', closeModalFornecedor);
 
-$('#modal-fornecedor-confirm').addEventListener('click', async () => {
+$('#modal-fornecedor-confirm').addEventListener('click', guardAgainstDoubleSubmit($('#modal-fornecedor-confirm'), async () => {
   const name = $('#modal-fornecedor-nome').value.trim();
   const contact = $('#modal-fornecedor-contato').value.trim();
   const notes = $('#modal-fornecedor-obs').value.trim();
@@ -432,7 +422,7 @@ $('#modal-fornecedor-confirm').addEventListener('click', async () => {
 
   closeModalFornecedor();
   await loadAll();
-});
+}));
 
 // ---------- ENTRADA DE ESTOQUE (COMPRA) ----------
 
@@ -459,8 +449,7 @@ function renderCompras() {
   });
 }
 
-$('#form-compra').addEventListener('submit', async (e) => {
-  e.preventDefault();
+$('#form-compra').addEventListener('submit', guardAgainstDoubleSubmit($('#compra-submit'), async () => {
   $('#compra-error').textContent = '';
 
   const productId = $('#compra-produto').value;
@@ -490,7 +479,7 @@ $('#form-compra').addEventListener('submit', async (e) => {
   $('#form-compra').reset();
   $('#compra-data').value = todayISO();
   await loadAll();
-});
+}));
 
 // ---------- VENDA (MINI-PDV) ----------
 
@@ -552,7 +541,7 @@ $('#btn-add-item-venda').addEventListener('click', () => {
   renderCarrinho();
 });
 
-$('#btn-confirmar-venda').addEventListener('click', async () => {
+$('#btn-confirmar-venda').addEventListener('click', guardAgainstDoubleSubmit($('#btn-confirmar-venda'), async () => {
   $('#venda-error').textContent = '';
 
   if (cart.length === 0) {
@@ -574,7 +563,7 @@ $('#btn-confirmar-venda').addEventListener('click', async () => {
   $('#venda-vendedor').value = '';
   renderCarrinho();
   await loadAll();
-});
+}));
 
 renderCarrinho();
 
@@ -603,8 +592,7 @@ function renderAjustes() {
   });
 }
 
-$('#form-ajuste').addEventListener('submit', async (e) => {
-  e.preventDefault();
+$('#form-ajuste').addEventListener('submit', guardAgainstDoubleSubmit($('#ajuste-submit'), async () => {
   $('#ajuste-error').textContent = '';
 
   const productId = $('#ajuste-produto').value;
@@ -629,7 +617,7 @@ $('#form-ajuste').addEventListener('submit', async (e) => {
 
   $('#form-ajuste').reset();
   await loadAll();
-});
+}));
 
 // ---------- RELATÓRIOS ----------
 

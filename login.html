@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login · Estoque &amp; Custos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="login-screen" id="login-screen">
+    <form class="login-box" id="login-form">
+      <p class="eyebrow">CONTROLE DE OBRA</p>
+      <h1 class="title">Estoque &amp; Custos</h1>
+      <p class="muted-text">Entre com sua conta para continuar.</p>
+      <label class="field-label">Email</label>
+      <input type="email" id="login-email" required autocomplete="username">
+      <label class="field-label">Senha</label>
+      <input type="password" id="login-password" required autocomplete="current-password">
+      <p class="login-error" id="login-error"></p>
+      <button type="submit" class="btn-primary full-width" id="login-submit">Entrar</button>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script src="login.js"></script>
+</body>
+</html>
